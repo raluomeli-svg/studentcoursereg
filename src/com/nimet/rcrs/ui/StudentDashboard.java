@@ -10,7 +10,9 @@ import javax.swing.border.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class StudentDashboard extends JPanel {
@@ -30,6 +32,7 @@ public class StudentDashboard extends JPanel {
     private DefaultTableModel  availableModel;
     private DefaultTableModel  selectedModel;
     private JLabel             selectionCountLabel;
+    private Registration       existingRegistration;
 
     // Registrations + results tab
     private DefaultTableModel  myRegModel;
@@ -207,11 +210,22 @@ public class StudentDashboard extends JPanel {
             return buildSemesterGatePanel(student.getCurrentSemester() - 1);
         }
 
+        existingRegistration = findCurrentSemesterRegistration();
+        Set<Course> alreadyRegistered = existingRegistration != null
+                ? existingRegistration.getSelectedCourses() : Collections.emptySet();
+
+        if (existingRegistration != null && alreadyRegistered.size() >= Registration.MAX_COURSES) {
+            return buildMaxReachedPanel(alreadyRegistered.size());
+        }
+
+        boolean isTopUp = existingRegistration != null;
+
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBorder(new EmptyBorder(12, 12, 12, 12));
 
         availableCourses = student.viewAvailableCourses().stream()
                 .filter(c -> c.getProgramme() == student.getProgramme())
+                .filter(c -> !alreadyRegistered.contains(c))
                 .collect(Collectors.toList());
 
         availableModel = new DefaultTableModel(new String[]{"Code", "Title", "Units"}, 0) {
@@ -230,9 +244,11 @@ public class StudentDashboard extends JPanel {
         JTable selTable = new JTable(selectedModel);
         styleTable(selTable);
 
-        selectionCountLabel = styledLabel(
-                "Selected: 0  (min " + Registration.MIN_COURSES + " · max " + Registration.MAX_COURSES + ")",
-                12, Font.BOLD, NAVY);
+        String initialHint = isTopUp
+                ? "Adding: 0  ·  registered: " + alreadyRegistered.size()
+                  + "  ·  max " + Registration.MAX_COURSES
+                : "Selected: 0  (min " + Registration.MIN_COURSES + " · max " + Registration.MAX_COURSES + ")";
+        selectionCountLabel = styledLabel(initialHint, 12, Font.BOLD, NAVY);
         selectionCountLabel.setBorder(new EmptyBorder(4, 4, 4, 4));
 
         JPanel rightPanel = new JPanel(new BorderLayout());
@@ -257,7 +273,7 @@ public class StudentDashboard extends JPanel {
         split.setResizeWeight(0.55);
         split.setDividerSize(6);
 
-        JButton submitBtn = new JButton("Submit Registration");
+        JButton submitBtn = new JButton(isTopUp ? "Add Courses" : "Submit Registration");
         styleButton(submitBtn, NAVY);
         submitBtn.setFont(submitBtn.getFont().deriveFont(Font.BOLD, 13f));
         submitBtn.addActionListener(e -> submitRegistration());
@@ -302,27 +318,93 @@ public class StudentDashboard extends JPanel {
     }
 
     private void updateSelectionCount() {
-        selectionCountLabel.setText("Selected: " + selectedCoursesList.size()
-                + "  (min " + Registration.MIN_COURSES + " · max " + Registration.MAX_COURSES + ")");
+        if (existingRegistration != null) {
+            int already = existingRegistration.getSelectedCourses().size();
+            selectionCountLabel.setText("Adding: " + selectedCoursesList.size()
+                    + "  ·  registered: " + already
+                    + "  ·  max " + Registration.MAX_COURSES);
+        } else {
+            selectionCountLabel.setText("Selected: " + selectedCoursesList.size()
+                    + "  (min " + Registration.MIN_COURSES + " · max " + Registration.MAX_COURSES + ")");
+        }
     }
 
     private void submitRegistration() {
-        Registration reg = student.submitRegistration();
-        for (Course c : selectedCoursesList) reg.addCourse(c);
-        try {
-            reg.submit();
-            dataStore.saveRegistration(reg);
+        if (existingRegistration != null) {
+            if (selectedCoursesList.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please select at least one course to add.",
+                        "No Selection", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            int currentCount = existingRegistration.getSelectedCourses().size();
+            int newCount = selectedCoursesList.size();
+            if (currentCount + newCount > Registration.MAX_COURSES) {
+                JOptionPane.showMessageDialog(this,
+                        "Adding " + newCount + " course(s) would exceed the maximum of "
+                        + Registration.MAX_COURSES + ".\nYou can add at most "
+                        + (Registration.MAX_COURSES - currentCount) + " more course(s).",
+                        "Registration Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            for (Course c : selectedCoursesList) existingRegistration.addCourse(c);
+            availableCourses.removeAll(selectedCoursesList);
             JOptionPane.showMessageDialog(this,
-                    "Registration submitted successfully!\n\nID       : " + reg.getRegistrationId()
-                    + "\nSemester : " + reg.getSemester() + "\nCourses  : " + reg.getSelectedCourses().size(),
+                    "Courses added successfully!\n\nSemester : " + existingRegistration.getSemester()
+                    + "\nTotal courses : " + existingRegistration.getSelectedCourses().size(),
                     "Success", JOptionPane.INFORMATION_MESSAGE);
             selectedCoursesList.clear();
             selectedModel.setRowCount(0);
             refreshAvailableModel();
             updateSelectionCount();
-        } catch (RegistrationException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Registration Error", JOptionPane.ERROR_MESSAGE);
+        } else {
+            Registration reg = student.submitRegistration();
+            for (Course c : selectedCoursesList) reg.addCourse(c);
+            try {
+                reg.submit();
+                dataStore.saveRegistration(reg);
+                existingRegistration = reg;
+                JOptionPane.showMessageDialog(this,
+                        "Registration submitted successfully!\n\nID       : " + reg.getRegistrationId()
+                        + "\nSemester : " + reg.getSemester() + "\nCourses  : " + reg.getSelectedCourses().size(),
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                availableCourses.removeAll(selectedCoursesList);
+                selectedCoursesList.clear();
+                selectedModel.setRowCount(0);
+                refreshAvailableModel();
+                updateSelectionCount();
+            } catch (RegistrationException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Registration Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
+    }
+
+    private Registration findCurrentSemesterRegistration() {
+        int calendarYear = student.getYearOfAdmission() + (student.getCurrentYear() - 1);
+        String semKey = calendarYear + "/" + student.getCurrentSemester();
+        return dataStore.findRegistration(student).stream()
+                .filter(r -> r.getSemester().equals(semKey) && r.isSubmitted())
+                .findFirst()
+                .orElse(null);
+    }
+
+    private JPanel buildMaxReachedPanel(int count) {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(new Color(0xF0, 0xF2, 0xF5));
+        JLabel icon = styledLabel("✓", 36, Font.BOLD, GREEN);
+        JLabel msg  = styledLabel(
+                "You have registered " + count + " courses for this semester (maximum reached).",
+                14, Font.PLAIN, new Color(0x44, 0x44, 0x44));
+        JLabel sub  = styledLabel(
+                "No further additions are allowed (max " + Registration.MAX_COURSES + ").",
+                12, Font.PLAIN, Color.GRAY);
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.gridx = 0; gc.gridy = 0; gc.insets = new Insets(0, 0, 8, 0);
+        panel.add(icon, gc);
+        gc.gridy = 1; gc.insets = new Insets(0, 0, 6, 0);
+        panel.add(msg, gc);
+        gc.gridy = 2; gc.insets = new Insets(0, 0, 0, 0);
+        panel.add(sub, gc);
+        return panel;
     }
 
     private boolean hasSubmittedSemester(int semester) {
