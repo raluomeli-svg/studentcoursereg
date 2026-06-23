@@ -69,8 +69,13 @@ public class LoginPanel extends JPanel {
         g.gridy = 2; g.gridx = 0; g.weightx = 0;
         card.add(new JLabel("User ID:"), g);
         userIdField = new JTextField(18);
+        // Wrap in same BorderLayout structure as pwdRow so both input boxes are equal width
+        JPanel userIdRow = new JPanel(new BorderLayout(2, 0));
+        userIdRow.setOpaque(false);
+        userIdRow.add(userIdField, BorderLayout.CENTER);
+        userIdRow.add(Box.createHorizontalStrut(28), BorderLayout.EAST);
         g.gridx = 1; g.weightx = 1;
-        card.add(userIdField, g);
+        card.add(userIdRow, g);
 
         g.gridy = 3; g.gridx = 0; g.weightx = 0;
         card.add(new JLabel("Password:"), g);
@@ -84,6 +89,7 @@ public class LoginPanel extends JPanel {
         eyeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         eyeBtn.setForeground(Color.GRAY);
         eyeBtn.setMargin(new Insets(0, 4, 0, 4));
+        eyeBtn.setPreferredSize(new Dimension(28, 28));
         eyeBtn.setToolTipText("Show / hide password");
         eyeBtn.addActionListener(e -> {
             if (passwordField.getEchoChar() == '\0') {
