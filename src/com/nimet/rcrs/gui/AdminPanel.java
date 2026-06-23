@@ -34,6 +34,7 @@ public class AdminPanel extends JPanel {
     private Registration selectedReg = null;
     private Student selectedStudentForResults = null;
     private JButton enterResultsBtn;
+    private JButton editProfileBtn;
 
     public AdminPanel(Admin admin, DataStore dataStore, Catalogue catalogue,
                       AuthenticationService authService, Runnable onLogout) {
@@ -472,8 +473,17 @@ public class AdminPanel extends JPanel {
                 showEnterResultsDialog(selectedStudentForResults, selectedReg);
         });
 
+        editProfileBtn = UITheme.secondaryButton("View / Edit Profile");
+        editProfileBtn.setPreferredSize(new Dimension(175, 34));
+        editProfileBtn.setEnabled(false);
+        editProfileBtn.addActionListener(e -> {
+            if (selectedStudentForResults != null)
+                showEditProfileDialog(selectedStudentForResults);
+        });
+
         JPanel regToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         regToolbar.setBackground(UITheme.BG_PAGE);
+        regToolbar.add(editProfileBtn);
         regToolbar.add(enterResultsBtn);
 
         JPanel regSection = new JPanel(new BorderLayout(0, 4));
@@ -481,7 +491,7 @@ public class AdminPanel extends JPanel {
         regSection.add(new JScrollPane(regTable), BorderLayout.CENTER);
         regSection.add(regToolbar, BorderLayout.SOUTH);
 
-        // When a student row is selected: populate registration list
+        // When a student row is selected: populate registration list and enable profile button
         studentTable.getSelectionModel().addListSelectionListener(ev -> {
             if (ev.getValueIsAdjusting()) return;
             int row = studentTable.getSelectedRow();
@@ -489,10 +499,12 @@ public class AdminPanel extends JPanel {
             selectedReg = null;
             selectedStudentForResults = null;
             enterResultsBtn.setEnabled(false);
+            editProfileBtn.setEnabled(false);
             if (row < 0) return;
             String sid = (String) studentModel.getValueAt(row, 0);
             selectedStudentForResults = dataStore.loadStudent(sid);
             if (selectedStudentForResults == null) return;
+            editProfileBtn.setEnabled(true);
             currentStudentRegs = new ArrayList<>(dataStore.findRegistration(selectedStudentForResults));
             for (Registration r : currentStudentRegs) {
                 regModel.addRow(new Object[]{
@@ -681,6 +693,110 @@ public class AdminPanel extends JPanel {
                 s.getEmail(), s.getPhone()
             });
         }
+    }
+
+    private void showEditProfileDialog(Student s) {
+        JDialog dlg = new JDialog(
+            (Frame) SwingUtilities.getWindowAncestor(this),
+            "Student Profile — " + s.getStudentId(), true);
+        dlg.setSize(500, 480);
+        dlg.setLocationRelativeTo(this);
+        dlg.setLayout(new BorderLayout());
+        dlg.getRootPane().setBorder(BorderFactory.createEmptyBorder(16, 20, 12, 20));
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(Color.WHITE);
+
+        GridBagConstraints lc = new GridBagConstraints();
+        lc.anchor = GridBagConstraints.WEST;
+        lc.insets = new Insets(8, 0, 2, 16);
+
+        GridBagConstraints fc = new GridBagConstraints();
+        fc.fill = GridBagConstraints.HORIZONTAL;
+        fc.weightx = 1;
+        fc.gridwidth = GridBagConstraints.REMAINDER;
+        fc.insets = new Insets(0, 0, 6, 0);
+
+        int row = 0;
+
+        // Read-only fields — student ID and full name cannot be changed
+        lc.gridy = row; fc.gridy = row++;
+        form.add(UITheme.label("Student ID  (read-only)"), lc);
+        JLabel idLbl = new JLabel(s.getStudentId());
+        idLbl.setFont(UITheme.FONT_MONO);
+        idLbl.setForeground(UITheme.PRIMARY);
+        form.add(idLbl, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(UITheme.label("Full Name  (read-only)"), lc);
+        JLabel nameLbl = new JLabel(s.getFullName());
+        nameLbl.setFont(UITheme.FONT_BODY);
+        form.add(nameLbl, fc);
+
+        // Editable fields
+        lc.gridy = row; fc.gridy = row++;
+        form.add(UITheme.label("Address"), lc);
+        JTextField addressF = UITheme.styledField();
+        addressF.setText(s.getAddress());
+        form.add(addressF, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(UITheme.label("Email"), lc);
+        JTextField emailF = UITheme.styledField();
+        emailF.setText(s.getEmail());
+        form.add(emailF, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(UITheme.label("Phone"), lc);
+        JTextField phoneF = UITheme.styledField();
+        phoneF.setText(s.getPhone());
+        form.add(phoneF, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(UITheme.label("Programme"), lc);
+        JComboBox<Programme> progC = new JComboBox<>(Programme.values());
+        progC.setSelectedItem(s.getProgramme());
+        progC.setFont(UITheme.FONT_BODY);
+        form.add(progC, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(UITheme.label("Current Year"), lc);
+        JSpinner yearS = new JSpinner(new SpinnerNumberModel(s.getCurrentYear(), 1, 4, 1));
+        form.add(yearS, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(UITheme.label("Current Semester"), lc);
+        JSpinner semS = new JSpinner(new SpinnerNumberModel(s.getCurrentSemester(), 1, 2, 1));
+        form.add(semS, fc);
+
+        dlg.add(new JScrollPane(form), BorderLayout.CENTER);
+
+        JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
+        btns.setOpaque(false);
+        JButton cancel = UITheme.secondaryButton("Cancel");
+        cancel.setPreferredSize(new Dimension(100, 34));
+        JButton save = UITheme.primaryButton("Save Changes");
+        save.setPreferredSize(new Dimension(130, 34));
+
+        cancel.addActionListener(e -> dlg.dispose());
+        save.addActionListener(e -> {
+            admin.updateStudentProfile(s,
+                addressF.getText().trim(),
+                emailF.getText().trim(),
+                phoneF.getText().trim(),
+                (Programme) progC.getSelectedItem(),
+                (int) yearS.getValue(),
+                (int) semS.getValue());
+            refreshStudentTable();
+            JOptionPane.showMessageDialog(dlg, "Profile updated successfully.",
+                "Saved", JOptionPane.INFORMATION_MESSAGE);
+            dlg.dispose();
+        });
+
+        btns.add(cancel);
+        btns.add(save);
+        dlg.add(btns, BorderLayout.SOUTH);
+        dlg.setVisible(true);
     }
 
     // ── Tab 4 · Report ────────────────────────────────────────────────────────

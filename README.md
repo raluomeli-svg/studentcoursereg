@@ -1,6 +1,6 @@
 # NiMet Course Registration System (RCRS)
 
-A **Swing desktop GUI** application for course registration at the **Nigerian Meteorological Agency (NiMet) Meteorological Training School**. When launched, it opens a graphical login window — there is no command-line interface. Built with plain Java SE and the built-in `javax.swing` library — no JavaFX, no external UI frameworks.
+A **Swing desktop GUI** application for course registration at the **Nigerian Meteorological Agency (NiMet) Meteorological Training School**. When launched, it opens a graphical login window. Built with plain Java SE and the built-in `javax.swing` library — no JavaFX, no external UI frameworks.
 
 ---
 

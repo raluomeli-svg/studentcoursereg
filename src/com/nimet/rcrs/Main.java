@@ -290,6 +290,7 @@ public class Main {
             print("  [4] View student registration");
             print("  [5] Generate report");
             print("  [6] Register new student");
+            print("  [7] View / Edit student profile");
             print("  [0] Logout");
 
             switch (readChoice()) {
@@ -299,6 +300,7 @@ public class Main {
                 case 4: viewStudentRegistration(admin); break;
                 case 5: generateReport(admin);          break;
                 case 6: registerNewStudent(admin);      break;
+                case 7: viewEditStudentProfile(admin);  break;
                 case 0:
                     authService.endSession();
                     print("Logged out.\n");
@@ -378,6 +380,47 @@ public class Main {
 
     private static void generateReport(Admin admin) {
         print("\n" + admin.generateStudentReport());
+    }
+
+    private static void viewEditStudentProfile(Admin admin) {
+        String id = prompt("\n  Enter student ID (e.g. NMS/2024/0001): ").trim();
+        Student student = admin.getRegistrationData(id);
+        if (student == null) {
+            print("  Student '" + id + "' not found.\n");
+            return;
+        }
+
+        printDivider("Student Profile — " + student.getStudentId());
+        print(student.viewProfile());
+
+        print("\n  Edit profile? [1] Yes  [0] No");
+        if (readChoice() != 1) return;
+
+        printDivider("Edit Profile");
+        print("  (Press Enter to keep the current value)\n");
+
+        String address = prompt("  Address      [" + student.getAddress() + "]: ").trim();
+        String email   = prompt("  Email        [" + student.getEmail()   + "]: ").trim();
+        String phone   = prompt("  Phone        [" + student.getPhone()   + "]: ").trim();
+
+        Programme[] progs = Programme.values();
+        print("  Programme (current: " + student.getProgramme().name() + "):");
+        for (int i = 0; i < progs.length; i++)
+            print("    [" + (i + 1) + "] " + progs[i].name() + " — " + progs[i].getFullName());
+        print("    [0] Keep current");
+        int pi = readChoice();
+        Programme programme = (pi >= 1 && pi <= progs.length) ? progs[pi - 1] : student.getProgramme();
+
+        int year = readInt("  Current Year     [" + student.getCurrentYear()     + "]: ");
+        int sem  = readInt("  Current Semester [" + student.getCurrentSemester() + "]: ");
+
+        admin.updateStudentProfile(student,
+            address.isEmpty() ? student.getAddress()  : address,
+            email.isEmpty()   ? student.getEmail()    : email,
+            phone.isEmpty()   ? student.getPhone()    : phone,
+            programme, year, sem);
+
+        print("\n  Profile updated successfully.\n");
     }
 
     private static void registerNewStudent(Admin admin) {

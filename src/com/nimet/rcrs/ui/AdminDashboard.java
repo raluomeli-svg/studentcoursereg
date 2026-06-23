@@ -40,6 +40,7 @@ public class AdminDashboard extends JPanel {
     private Registration selectedReg = null;
     private Student      selectedStudentForResults = null;
     private JButton      enterResultsBtn;
+    private JButton      editProfileBtn;
 
     public AdminDashboard(RcrsApp app, Admin admin, DataStore dataStore,
                           Catalogue catalogue, AuthenticationService authService) {
@@ -428,7 +429,16 @@ public class AdminDashboard extends JPanel {
                 showEnterResultsDialog(selectedStudentForResults, selectedReg);
         });
 
+        editProfileBtn = new JButton("View / Edit Profile");
+        editProfileBtn.setPreferredSize(new Dimension(175, 34));
+        editProfileBtn.setEnabled(false);
+        editProfileBtn.addActionListener(e -> {
+            if (selectedStudentForResults != null)
+                showEditProfileDialog(selectedStudentForResults);
+        });
+
         JPanel regToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        regToolbar.add(editProfileBtn);
         regToolbar.add(enterResultsBtn);
 
         JPanel regSection = new JPanel(new BorderLayout(0, 4));
@@ -439,11 +449,13 @@ public class AdminDashboard extends JPanel {
             if (ev.getValueIsAdjusting()) return;
             int row = studentTable.getSelectedRow();
             regModel.setRowCount(0);
-            selectedReg = null; selectedStudentForResults = null; enterResultsBtn.setEnabled(false);
+            selectedReg = null; selectedStudentForResults = null;
+            enterResultsBtn.setEnabled(false); editProfileBtn.setEnabled(false);
             if (row < 0) return;
             String sid = (String) studentModel.getValueAt(row, 0);
             selectedStudentForResults = dataStore.loadStudent(sid);
             if (selectedStudentForResults == null) return;
+            editProfileBtn.setEnabled(true);
             currentStudentRegs = new ArrayList<>(dataStore.findRegistration(selectedStudentForResults));
             for (Registration r : currentStudentRegs) {
                 regModel.addRow(new Object[]{
@@ -639,6 +651,105 @@ public class AdminDashboard extends JPanel {
         panel.add(toolbar,                     BorderLayout.NORTH);
         panel.add(new JScrollPane(reportArea), BorderLayout.CENTER);
         return panel;
+    }
+
+    private void showEditProfileDialog(Student s) {
+        JDialog dlg = new JDialog(
+            (Frame) SwingUtilities.getWindowAncestor(this),
+            "Student Profile — " + s.getStudentId(), true);
+        dlg.setSize(500, 480);
+        dlg.setLocationRelativeTo(this);
+        dlg.setLayout(new BorderLayout());
+        dlg.getRootPane().setBorder(BorderFactory.createEmptyBorder(16, 20, 12, 20));
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(Color.WHITE);
+
+        GridBagConstraints lc = new GridBagConstraints();
+        lc.anchor = GridBagConstraints.WEST;
+        lc.insets = new Insets(8, 0, 2, 16);
+
+        GridBagConstraints fc = new GridBagConstraints();
+        fc.fill = GridBagConstraints.HORIZONTAL;
+        fc.weightx = 1;
+        fc.gridwidth = GridBagConstraints.REMAINDER;
+        fc.insets = new Insets(0, 0, 6, 0);
+
+        int row = 0;
+
+        // Read-only fields
+        lc.gridy = row; fc.gridy = row++;
+        form.add(styledLabel("Student ID  (read-only)", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        JLabel idLbl = new JLabel(s.getStudentId());
+        idLbl.setFont(new Font("Monospaced", Font.BOLD, 13));
+        idLbl.setForeground(NAVY);
+        form.add(idLbl, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(styledLabel("Full Name  (read-only)", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        form.add(styledLabel(s.getFullName(), 13, Font.PLAIN, Color.DARK_GRAY), fc);
+
+        // Editable fields
+        lc.gridy = row; fc.gridy = row++;
+        form.add(styledLabel("Address", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        JTextField addressF = new JTextField(s.getAddress());
+        form.add(addressF, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(styledLabel("Email", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        JTextField emailF = new JTextField(s.getEmail());
+        form.add(emailF, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(styledLabel("Phone", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        JTextField phoneF = new JTextField(s.getPhone());
+        form.add(phoneF, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(styledLabel("Programme", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        JComboBox<Programme> progC = new JComboBox<>(Programme.values());
+        progC.setSelectedItem(s.getProgramme());
+        form.add(progC, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(styledLabel("Current Year", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        JSpinner yearS = new JSpinner(new SpinnerNumberModel(s.getCurrentYear(), 1, 4, 1));
+        form.add(yearS, fc);
+
+        lc.gridy = row; fc.gridy = row++;
+        form.add(styledLabel("Current Semester", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        JSpinner semS = new JSpinner(new SpinnerNumberModel(s.getCurrentSemester(), 1, 2, 1));
+        form.add(semS, fc);
+
+        dlg.add(new JScrollPane(form), BorderLayout.CENTER);
+
+        JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
+        btns.setOpaque(false);
+        JButton cancel = new JButton("Cancel");
+        cancel.setPreferredSize(new Dimension(100, 34));
+        JButton save = new JButton("Save Changes");
+        styleButton(save, GREEN);
+        save.setPreferredSize(new Dimension(130, 34));
+
+        cancel.addActionListener(e -> dlg.dispose());
+        save.addActionListener(e -> {
+            admin.updateStudentProfile(s,
+                addressF.getText().trim(),
+                emailF.getText().trim(),
+                phoneF.getText().trim(),
+                (Programme) progC.getSelectedItem(),
+                (int) yearS.getValue(),
+                (int) semS.getValue());
+            refreshStudentTable();
+            JOptionPane.showMessageDialog(dlg, "Profile updated successfully.",
+                "Saved", JOptionPane.INFORMATION_MESSAGE);
+            dlg.dispose();
+        });
+
+        btns.add(cancel);
+        btns.add(save);
+        dlg.add(btns, BorderLayout.SOUTH);
+        dlg.setVisible(true);
     }
 
     // ── UI helpers ─────────────────────────────────────────────────────────────

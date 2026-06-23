@@ -8,10 +8,10 @@ public class Student extends User {
 
     // Format: NMS/YYYY/NNNN  e.g. NMS/2024/0001
     private final String studentId;
-    private final Programme programme;
+    private Programme programme;
     private final int yearOfAdmission;
-    private final int currentYear;
-    private final int currentSemester;
+    private int currentYear;
+    private int currentSemester;
 
     // Profile fields — set at registration, editable only via admin
     private String address;
@@ -97,6 +97,12 @@ public class Student extends User {
     public boolean isTemporaryPassword()  { return temporaryPassword; }
 
     public void setTemporaryPassword(boolean flag) { this.temporaryPassword = flag; }
+    public void setAddress(String address)         { this.address = address; }
+    public void setEmail(String email)             { this.email = email; }
+    public void setPhone(String phone)             { this.phone = phone; }
+    public void setProgramme(Programme programme)  { this.programme = programme; }
+    public void setCurrentYear(int year)           { this.currentYear = year; }
+    public void setCurrentSemester(int semester)   { this.currentSemester = semester; }
 
     public void setCatalogue(Catalogue catalogue)  { this.catalogue = catalogue; }
     public void setDataStore(DataStore dataStore)  { this.dataStore = dataStore; }
