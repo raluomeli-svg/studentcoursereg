@@ -656,80 +656,137 @@ public class AdminDashboard extends JPanel {
     private void showEditProfileDialog(Student s) {
         JDialog dlg = new JDialog(
             (Frame) SwingUtilities.getWindowAncestor(this),
-            "Student Profile — " + s.getStudentId(), true);
-        dlg.setSize(500, 480);
+            "Edit Student Profile", true);
+        dlg.setSize(560, 580);
         dlg.setLocationRelativeTo(this);
         dlg.setLayout(new BorderLayout());
-        dlg.getRootPane().setBorder(BorderFactory.createEmptyBorder(16, 20, 12, 20));
+        dlg.setBackground(BG);
 
-        JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(Color.WHITE);
+        // ── Scrollable content wrapper ────────────────────────────────────────
+        JPanel page = new JPanel();
+        page.setLayout(new BoxLayout(page, BoxLayout.Y_AXIS));
+        page.setBackground(BG);
+        page.setBorder(BorderFactory.createEmptyBorder(28, 48, 20, 48));
+
+        // ── Page heading ──────────────────────────────────────────────────────
+        JLabel heading = styledLabel("Edit Student Profile", 20, Font.BOLD, NAVY);
+        heading.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel subHeading = styledLabel("Student ID and Full Name cannot be changed.",
+            12, Font.PLAIN, Color.GRAY);
+        subHeading.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        page.add(heading);
+        page.add(Box.createVerticalStrut(4));
+        page.add(subHeading);
+        page.add(Box.createVerticalStrut(20));
+
+        // ── Identity card (read-only) ─────────────────────────────────────────
+        JPanel identityCard = new JPanel(new GridBagLayout());
+        identityCard.setBackground(new Color(0xF0, 0xF4, 0xFF));
+        identityCard.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(0xC5, 0xD3, 0xF0), 1),
+            BorderFactory.createEmptyBorder(14, 20, 14, 20)));
+        identityCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+        identityCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+
+        GridBagConstraints il = new GridBagConstraints();
+        il.anchor = GridBagConstraints.WEST;
+        il.insets = new Insets(4, 0, 4, 20);
+
+        GridBagConstraints iv = new GridBagConstraints();
+        iv.fill = GridBagConstraints.HORIZONTAL;
+        iv.weightx = 1;
+        iv.gridwidth = GridBagConstraints.REMAINDER;
+        iv.insets = new Insets(4, 0, 4, 0);
+
+        il.gridy = 0; iv.gridy = 0;
+        identityCard.add(styledLabel("Student ID", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), il);
+        JLabel idLbl = new JLabel(s.getStudentId());
+        idLbl.setFont(new Font("Monospaced", Font.BOLD, 13));
+        idLbl.setForeground(NAVY);
+        identityCard.add(idLbl, iv);
+
+        il.gridy = 1; iv.gridy = 1;
+        identityCard.add(styledLabel("Full Name", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), il);
+        identityCard.add(styledLabel(s.getFullName(), 13, Font.PLAIN, Color.DARK_GRAY), iv);
+
+        page.add(identityCard);
+        page.add(Box.createVerticalStrut(20));
+
+        // ── Editable fields card ──────────────────────────────────────────────
+        JPanel editCard = new JPanel(new GridBagLayout());
+        editCard.setBackground(Color.WHITE);
+        editCard.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(0xDF, 0xE6, 0xE9), 1),
+            BorderFactory.createEmptyBorder(20, 24, 20, 24)));
+        editCard.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         GridBagConstraints lc = new GridBagConstraints();
         lc.anchor = GridBagConstraints.WEST;
-        lc.insets = new Insets(8, 0, 2, 16);
+        lc.insets = new Insets(8, 0, 2, 20);
 
         GridBagConstraints fc = new GridBagConstraints();
         fc.fill = GridBagConstraints.HORIZONTAL;
         fc.weightx = 1;
         fc.gridwidth = GridBagConstraints.REMAINDER;
-        fc.insets = new Insets(0, 0, 6, 0);
+        fc.insets = new Insets(0, 0, 10, 0);
 
         int row = 0;
 
-        // Read-only fields
         lc.gridy = row; fc.gridy = row++;
-        form.add(styledLabel("Student ID  (read-only)", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
-        JLabel idLbl = new JLabel(s.getStudentId());
-        idLbl.setFont(new Font("Monospaced", Font.BOLD, 13));
-        idLbl.setForeground(NAVY);
-        form.add(idLbl, fc);
-
-        lc.gridy = row; fc.gridy = row++;
-        form.add(styledLabel("Full Name  (read-only)", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
-        form.add(styledLabel(s.getFullName(), 13, Font.PLAIN, Color.DARK_GRAY), fc);
-
-        // Editable fields
-        lc.gridy = row; fc.gridy = row++;
-        form.add(styledLabel("Address", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        editCard.add(styledLabel("Address", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
         JTextField addressF = new JTextField(s.getAddress());
-        form.add(addressF, fc);
+        editCard.add(addressF, fc);
 
         lc.gridy = row; fc.gridy = row++;
-        form.add(styledLabel("Email", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        editCard.add(styledLabel("Email", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
         JTextField emailF = new JTextField(s.getEmail());
-        form.add(emailF, fc);
+        editCard.add(emailF, fc);
 
         lc.gridy = row; fc.gridy = row++;
-        form.add(styledLabel("Phone", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        editCard.add(styledLabel("Phone", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
         JTextField phoneF = new JTextField(s.getPhone());
-        form.add(phoneF, fc);
+        editCard.add(phoneF, fc);
 
         lc.gridy = row; fc.gridy = row++;
-        form.add(styledLabel("Programme", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        editCard.add(styledLabel("Programme", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
         JComboBox<Programme> progC = new JComboBox<>(Programme.values());
         progC.setSelectedItem(s.getProgramme());
-        form.add(progC, fc);
+        editCard.add(progC, fc);
 
         lc.gridy = row; fc.gridy = row++;
-        form.add(styledLabel("Current Year", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        editCard.add(styledLabel("Current Year", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
         JSpinner yearS = new JSpinner(new SpinnerNumberModel(s.getCurrentYear(), 1, 4, 1));
-        form.add(yearS, fc);
+        editCard.add(yearS, fc);
 
         lc.gridy = row; fc.gridy = row++;
-        form.add(styledLabel("Current Semester", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
+        editCard.add(styledLabel("Current Semester", 13, Font.BOLD, new Color(0x44, 0x44, 0x44)), lc);
         JSpinner semS = new JSpinner(new SpinnerNumberModel(s.getCurrentSemester(), 1, 2, 1));
-        form.add(semS, fc);
+        editCard.add(semS, fc);
 
-        dlg.add(new JScrollPane(form), BorderLayout.CENTER);
+        page.add(editCard);
 
-        JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
-        btns.setOpaque(false);
+        // Anchor page content to top inside the scroll pane
+        JPanel anchor = new JPanel(new BorderLayout());
+        anchor.setBackground(BG);
+        anchor.add(page, BorderLayout.NORTH);
+
+        JScrollPane scroll = new JScrollPane(anchor,
+            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+            JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        dlg.add(scroll, BorderLayout.CENTER);
+
+        // ── Button bar ────────────────────────────────────────────────────────
+        JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
+        btns.setBackground(new Color(0xF0, 0xF2, 0xF5));
+        btns.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(0xDF, 0xE6, 0xE9)));
         JButton cancel = new JButton("Cancel");
-        cancel.setPreferredSize(new Dimension(100, 34));
+        cancel.setPreferredSize(new Dimension(100, 36));
         JButton save = new JButton("Save Changes");
         styleButton(save, GREEN);
-        save.setPreferredSize(new Dimension(130, 34));
+        save.setPreferredSize(new Dimension(140, 36));
 
         cancel.addActionListener(e -> dlg.dispose());
         save.addActionListener(e -> {

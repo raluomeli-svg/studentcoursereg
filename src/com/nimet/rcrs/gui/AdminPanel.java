@@ -698,85 +698,141 @@ public class AdminPanel extends JPanel {
     private void showEditProfileDialog(Student s) {
         JDialog dlg = new JDialog(
             (Frame) SwingUtilities.getWindowAncestor(this),
-            "Student Profile — " + s.getStudentId(), true);
-        dlg.setSize(500, 480);
+            "Edit Student Profile", true);
+        dlg.setSize(560, 580);
         dlg.setLocationRelativeTo(this);
         dlg.setLayout(new BorderLayout());
-        dlg.getRootPane().setBorder(BorderFactory.createEmptyBorder(16, 20, 12, 20));
+        dlg.setBackground(UITheme.BG_PAGE);
 
-        JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(Color.WHITE);
+        // ── Scrollable content wrapper ────────────────────────────────────────
+        JPanel page = new JPanel();
+        page.setLayout(new BoxLayout(page, BoxLayout.Y_AXIS));
+        page.setBackground(UITheme.BG_PAGE);
+        page.setBorder(BorderFactory.createEmptyBorder(28, 48, 20, 48));
+
+        // ── Page heading ──────────────────────────────────────────────────────
+        JLabel heading = new JLabel("Edit Student Profile");
+        heading.setFont(UITheme.FONT_TITLE);
+        heading.setForeground(UITheme.PRIMARY);
+        heading.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel subHeading = UITheme.muted("Student ID and Full Name cannot be changed.");
+        subHeading.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        page.add(heading);
+        page.add(Box.createVerticalStrut(4));
+        page.add(subHeading);
+        page.add(Box.createVerticalStrut(20));
+
+        // ── Identity card (read-only) ─────────────────────────────────────────
+        JPanel identityCard = new JPanel(new GridBagLayout());
+        identityCard.setBackground(new Color(0xF0, 0xF4, 0xFF));
+        identityCard.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(0xC5, 0xD3, 0xF0), 1),
+            BorderFactory.createEmptyBorder(14, 20, 14, 20)));
+        identityCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+        identityCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+
+        GridBagConstraints il = new GridBagConstraints();
+        il.anchor = GridBagConstraints.WEST;
+        il.insets = new Insets(4, 0, 4, 20);
+
+        GridBagConstraints iv = new GridBagConstraints();
+        iv.fill = GridBagConstraints.HORIZONTAL;
+        iv.weightx = 1;
+        iv.gridwidth = GridBagConstraints.REMAINDER;
+        iv.insets = new Insets(4, 0, 4, 0);
+
+        il.gridy = 0; iv.gridy = 0;
+        identityCard.add(UITheme.label("Student ID"), il);
+        JLabel idLbl = new JLabel(s.getStudentId());
+        idLbl.setFont(UITheme.FONT_MONO);
+        idLbl.setForeground(UITheme.PRIMARY);
+        identityCard.add(idLbl, iv);
+
+        il.gridy = 1; iv.gridy = 1;
+        identityCard.add(UITheme.label("Full Name"), il);
+        JLabel nameLbl = new JLabel(s.getFullName());
+        nameLbl.setFont(UITheme.FONT_BODY);
+        identityCard.add(nameLbl, iv);
+
+        page.add(identityCard);
+        page.add(Box.createVerticalStrut(20));
+
+        // ── Editable fields card ──────────────────────────────────────────────
+        JPanel editCard = UITheme.card();
+        editCard.setLayout(new GridBagLayout());
+        editCard.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         GridBagConstraints lc = new GridBagConstraints();
         lc.anchor = GridBagConstraints.WEST;
-        lc.insets = new Insets(8, 0, 2, 16);
+        lc.insets = new Insets(8, 0, 2, 20);
 
         GridBagConstraints fc = new GridBagConstraints();
         fc.fill = GridBagConstraints.HORIZONTAL;
         fc.weightx = 1;
         fc.gridwidth = GridBagConstraints.REMAINDER;
-        fc.insets = new Insets(0, 0, 6, 0);
+        fc.insets = new Insets(0, 0, 10, 0);
 
         int row = 0;
 
-        // Read-only fields — student ID and full name cannot be changed
         lc.gridy = row; fc.gridy = row++;
-        form.add(UITheme.label("Student ID  (read-only)"), lc);
-        JLabel idLbl = new JLabel(s.getStudentId());
-        idLbl.setFont(UITheme.FONT_MONO);
-        idLbl.setForeground(UITheme.PRIMARY);
-        form.add(idLbl, fc);
-
-        lc.gridy = row; fc.gridy = row++;
-        form.add(UITheme.label("Full Name  (read-only)"), lc);
-        JLabel nameLbl = new JLabel(s.getFullName());
-        nameLbl.setFont(UITheme.FONT_BODY);
-        form.add(nameLbl, fc);
-
-        // Editable fields
-        lc.gridy = row; fc.gridy = row++;
-        form.add(UITheme.label("Address"), lc);
+        editCard.add(UITheme.label("Address"), lc);
         JTextField addressF = UITheme.styledField();
         addressF.setText(s.getAddress());
-        form.add(addressF, fc);
+        editCard.add(addressF, fc);
 
         lc.gridy = row; fc.gridy = row++;
-        form.add(UITheme.label("Email"), lc);
+        editCard.add(UITheme.label("Email"), lc);
         JTextField emailF = UITheme.styledField();
         emailF.setText(s.getEmail());
-        form.add(emailF, fc);
+        editCard.add(emailF, fc);
 
         lc.gridy = row; fc.gridy = row++;
-        form.add(UITheme.label("Phone"), lc);
+        editCard.add(UITheme.label("Phone"), lc);
         JTextField phoneF = UITheme.styledField();
         phoneF.setText(s.getPhone());
-        form.add(phoneF, fc);
+        editCard.add(phoneF, fc);
 
         lc.gridy = row; fc.gridy = row++;
-        form.add(UITheme.label("Programme"), lc);
+        editCard.add(UITheme.label("Programme"), lc);
         JComboBox<Programme> progC = new JComboBox<>(Programme.values());
         progC.setSelectedItem(s.getProgramme());
         progC.setFont(UITheme.FONT_BODY);
-        form.add(progC, fc);
+        editCard.add(progC, fc);
 
         lc.gridy = row; fc.gridy = row++;
-        form.add(UITheme.label("Current Year"), lc);
+        editCard.add(UITheme.label("Current Year"), lc);
         JSpinner yearS = new JSpinner(new SpinnerNumberModel(s.getCurrentYear(), 1, 4, 1));
-        form.add(yearS, fc);
+        editCard.add(yearS, fc);
 
         lc.gridy = row; fc.gridy = row++;
-        form.add(UITheme.label("Current Semester"), lc);
+        editCard.add(UITheme.label("Current Semester"), lc);
         JSpinner semS = new JSpinner(new SpinnerNumberModel(s.getCurrentSemester(), 1, 2, 1));
-        form.add(semS, fc);
+        editCard.add(semS, fc);
 
-        dlg.add(new JScrollPane(form), BorderLayout.CENTER);
+        page.add(editCard);
 
-        JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
-        btns.setOpaque(false);
+        // Anchor page content to top inside the scroll pane
+        JPanel anchor = new JPanel(new BorderLayout());
+        anchor.setBackground(UITheme.BG_PAGE);
+        anchor.add(page, BorderLayout.NORTH);
+
+        JScrollPane scroll = new JScrollPane(anchor,
+            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+            JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        dlg.add(scroll, BorderLayout.CENTER);
+
+        // ── Button bar ────────────────────────────────────────────────────────
+        JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
+        btns.setBackground(new Color(0xF0, 0xF2, 0xF5));
+        btns.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(0xDF, 0xE6, 0xE9)));
         JButton cancel = UITheme.secondaryButton("Cancel");
-        cancel.setPreferredSize(new Dimension(100, 34));
+        cancel.setPreferredSize(new Dimension(100, 36));
         JButton save = UITheme.primaryButton("Save Changes");
-        save.setPreferredSize(new Dimension(130, 34));
+        save.setPreferredSize(new Dimension(140, 36));
 
         cancel.addActionListener(e -> dlg.dispose());
         save.addActionListener(e -> {
