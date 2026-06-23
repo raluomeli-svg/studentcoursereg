@@ -22,7 +22,8 @@ public class RegistrationTest {
     public void setUp() {
         student = new Student(
                 "NMS/2024/0001", "Test Student", "hash",
-                "NMS/2024/0001", Programme.BIPMT, 2024, 1, 1);
+                "NMS/2024/0001", Programme.BIPMT, 2024, 1, 1,
+                "", "", "");
         registration = new Registration(student, "2024/1");
     }
 
