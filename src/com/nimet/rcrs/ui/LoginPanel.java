@@ -75,8 +75,32 @@ public class LoginPanel extends JPanel {
         g.gridy = 3; g.gridx = 0; g.weightx = 0;
         card.add(new JLabel("Password:"), g);
         passwordField = new JPasswordField(18);
+        final char defaultEcho = passwordField.getEchoChar();
+        JButton eyeBtn = new JButton("👁");
+        eyeBtn.setFont(new Font("Dialog", Font.PLAIN, 14));
+        eyeBtn.setFocusPainted(false);
+        eyeBtn.setBorderPainted(false);
+        eyeBtn.setContentAreaFilled(false);
+        eyeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        eyeBtn.setForeground(Color.GRAY);
+        eyeBtn.setMargin(new Insets(0, 4, 0, 4));
+        eyeBtn.setToolTipText("Show / hide password");
+        eyeBtn.addActionListener(e -> {
+            if (passwordField.getEchoChar() == '\0') {
+                passwordField.setEchoChar(defaultEcho);
+                eyeBtn.setForeground(Color.GRAY);
+            } else {
+                passwordField.setEchoChar('\0');
+                eyeBtn.setForeground(new Color(0x1B, 0x3A, 0x5C));
+            }
+            passwordField.requestFocus();
+        });
+        JPanel pwdRow = new JPanel(new BorderLayout(2, 0));
+        pwdRow.setOpaque(false);
+        pwdRow.add(passwordField, BorderLayout.CENTER);
+        pwdRow.add(eyeBtn, BorderLayout.EAST);
         g.gridx = 1; g.weightx = 1;
-        card.add(passwordField, g);
+        card.add(pwdRow, g);
 
         // ── Status message ────────────────────────────────────────────────────
         messageLabel = new JLabel(" ", SwingConstants.CENTER);
