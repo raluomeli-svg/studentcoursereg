@@ -1,6 +1,6 @@
 # NiMet Course Registration System (RCRS)
 
-A desktop course registration application for the **Nigerian Meteorological Agency (NiMet) Meteorological Training School**. Built with plain Java and Swing — no external frameworks.
+A **Swing desktop GUI** application for course registration at the **Nigerian Meteorological Agency (NiMet) Meteorological Training School**. When launched, it opens a graphical login window — there is no command-line interface. Built with plain Java SE and the built-in `javax.swing` library — no JavaFX, no external UI frameworks.
 
 ---
 
@@ -23,7 +23,9 @@ No build tool (Maven/Gradle) is required. The project uses plain `javac`.
 
 ---
 
-## Running in IntelliJ IDEA (recommended)
+## Running the Swing GUI
+
+### In IntelliJ IDEA (recommended)
 
 1. Open IntelliJ IDEA and choose **File → Open**, then select the `StudentCourseReg` folder.
 2. IntelliJ will detect the project from `StudentCourseReg.iml` automatically.
@@ -31,30 +33,32 @@ No build tool (Maven/Gradle) is required. The project uses plain `javac`.
 4. In the Project panel, navigate to `src/com/nimet/rcrs/ui/RcrsApp.java`.
 5. Click the **green play button (▶)** next to the `main` method, then select **Run 'RcrsApp.main()'**.
 
-The login window will open on screen.
+The Swing login window will open on screen.
 
 ---
 
-## Running from the command line
+### From the command line
 
-From the project root directory:
+The `java` command below launches the same Swing window — not a text interface.
+
+**Linux / macOS:**
 
 ```bash
 # 1. Compile
 javac -d out/production $(find src -name "*.java")
 
-# 2. Run
+# 2. Launch the Swing GUI
 java -cp out/production com.nimet.rcrs.ui.RcrsApp
 ```
 
-**On Windows (PowerShell):**
+**Windows (PowerShell):**
 
 ```powershell
 # 1. Compile
 $files = Get-ChildItem -Recurse -Filter "*.java" src | Select-Object -ExpandProperty FullName
 javac -d out\production $files
 
-# 2. Run
+# 2. Launch the Swing GUI
 java -cp out\production com.nimet.rcrs.ui.RcrsApp
 ```
 
