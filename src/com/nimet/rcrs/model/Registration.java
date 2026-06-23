@@ -18,6 +18,7 @@ public class Registration {
 
     private final String registrationId;
     private final Student student;
+    // LinkedHashSet: preserves insertion order so courses are always displayed in the order they were added
     private final Set<Course> selectedCourses = new LinkedHashSet<>();
     private final String semester;
     private LocalDateTime submittedAt;

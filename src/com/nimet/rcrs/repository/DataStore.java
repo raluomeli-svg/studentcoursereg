@@ -47,6 +47,7 @@ public class DataStore {
         if (sid != null && sid.matches("NMS/\\d{4}/\\d{4}")) {
             int year = Integer.parseInt(sid.split("/")[1]);
             int seq  = Integer.parseInt(sid.split("/")[2]);
+            // Keep the counter at the highest sequence seen so generateNextStudentId never reuses one
             yearCounters.merge(year, seq, Math::max);
         }
     }

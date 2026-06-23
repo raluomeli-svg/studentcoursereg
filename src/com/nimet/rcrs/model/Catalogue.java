@@ -37,6 +37,7 @@ public class Catalogue {
                 .collect(Collectors.toList());
     }
 
+    // Defensive copy — callers cannot mutate the internal list through the returned reference
     public List<Course> getAllCourses() {
         return new ArrayList<>(courses);
     }

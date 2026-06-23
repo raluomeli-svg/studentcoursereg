@@ -10,6 +10,7 @@ public class Result {
     public Result(String registrationId, Course course, double testScore, double examScore) {
         this.registrationId = registrationId;
         this.course         = course;
+        // Clamp on construction so no Result can be created with an out-of-range score
         this.testScore      = Math.max(0, Math.min(40, testScore));
         this.examScore      = Math.max(0, Math.min(60, examScore));
     }

@@ -56,6 +56,7 @@ public class Student extends User {
     // Creates and returns a blank Registration for the current semester.
     // Caller (Main) populates it, then calls registration.submit().
     public Registration submitRegistration() {
+        // e.g. admitted 2024, currentYear=1 → calendarYear=2024; currentYear=2 → 2025
         int calendarYear = yearOfAdmission + (currentYear - 1);
         String semester  = calendarYear + "/" + currentSemester;
         return new Registration(this, semester);
