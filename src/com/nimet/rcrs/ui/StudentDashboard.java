@@ -256,22 +256,34 @@ public class StudentDashboard extends JPanel {
         rightPanel.add(selectionCountLabel, BorderLayout.NORTH);
         rightPanel.add(new JScrollPane(selTable), BorderLayout.CENTER);
 
-        JButton addBtn    = new JButton("Add ▶");
-        JButton removeBtn = new JButton("◄ Remove");
-        styleButton(addBtn, GREEN);
-        styleButton(removeBtn, RED);
+        JButton addBtn    = new JButton("Add →");
+        JButton removeBtn = new JButton("← Remove");
+        conventionButton(addBtn,    GREEN);
+        conventionButton(removeBtn, RED);
         addBtn.addActionListener(e -> addSelectedCourse(availTable));
         removeBtn.addActionListener(e -> removeSelectedCourse(selTable));
 
-        JPanel btnCol = new JPanel(new GridLayout(2, 1, 0, 10));
+        // Buttons sit between the two tables, centred vertically
+        JPanel btnCol = new JPanel();
+        btnCol.setLayout(new BoxLayout(btnCol, BoxLayout.Y_AXIS));
         btnCol.setOpaque(false);
-        btnCol.setBorder(new EmptyBorder(60, 6, 0, 6));
+        btnCol.setBorder(new EmptyBorder(0, 10, 0, 10));
+        addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        removeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnCol.add(Box.createVerticalGlue());
         btnCol.add(addBtn);
+        btnCol.add(Box.createVerticalStrut(10));
         btnCol.add(removeBtn);
+        btnCol.add(Box.createVerticalGlue());
 
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
-        split.setResizeWeight(0.55);
-        split.setDividerSize(6);
+        // Three-column layout: [Available] [Buttons] [Selection]
+        JPanel mainArea = new JPanel(new GridBagLayout());
+        mainArea.setOpaque(false);
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.fill = GridBagConstraints.BOTH; gc.weighty = 1;
+        gc.gridx = 0; gc.weightx = 0.55; mainArea.add(leftPanel, gc);
+        gc.gridx = 1; gc.weightx = 0;    mainArea.add(btnCol, gc);
+        gc.gridx = 2; gc.weightx = 0.45; mainArea.add(rightPanel, gc);
 
         JButton submitBtn = new JButton(isTopUp ? "Add Courses" : "Submit Registration");
         styleButton(submitBtn, NAVY);
@@ -281,8 +293,7 @@ public class StudentDashboard extends JPanel {
         JPanel bottomRow = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomRow.add(submitBtn);
 
-        panel.add(split,     BorderLayout.CENTER);
-        panel.add(btnCol,    BorderLayout.EAST);
+        panel.add(mainArea,  BorderLayout.CENTER);
         panel.add(bottomRow, BorderLayout.SOUTH);
         return panel;
     }
@@ -604,6 +615,21 @@ public class StudentDashboard extends JPanel {
         btn.setBorderPainted(false);
         btn.setOpaque(true);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    }
+
+    private void conventionButton(JButton btn, Color bg) {
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("SansSerif", Font.BOLD, 13));
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setOpaque(true);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setMargin(new Insets(8, 16, 8, 16));
+        Dimension size = new Dimension(120, 36);
+        btn.setPreferredSize(size);
+        btn.setMaximumSize(size);
+        btn.setMinimumSize(size);
     }
 
     private JLabel styledLabel(String text, int size, int style, Color color) {
